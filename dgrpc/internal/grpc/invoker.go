@@ -50,22 +50,18 @@ func NewInvoker() *Invoker {
 
 // Invoke calls a gRPC method using a method descriptor
 func (i *Invoker) Invoke(req *InvokeRequest, methodDesc *desc.MethodDescriptor) (*InvokeResponse, error) {
-	startTime := time.Now()
-
 	if methodDesc == nil {
 		return &InvokeResponse{
-			Success:  false,
-			Error:    "method descriptor is nil - proto file may not be loaded",
-			Duration: time.Since(startTime).Milliseconds(),
+			Success: false,
+			Error:   "method descriptor is nil - proto file may not be loaded",
 		}, nil
 	}
 
 	conn, err := i.getConnection(req.Address, req.UseTLS, req.InsecureSkip)
 	if err != nil {
 		return &InvokeResponse{
-			Success:  false,
-			Error:    fmt.Sprintf("failed to connect: %v", err),
-			Duration: time.Since(startTime).Milliseconds(),
+			Success: false,
+			Error:   fmt.Sprintf("failed to connect: %v", err),
 		}, nil
 	}
 
@@ -84,9 +80,8 @@ func (i *Invoker) Invoke(req *InvokeRequest, methodDesc *desc.MethodDescriptor) 
 		var rawCheck map[string]interface{}
 		if err := json.Unmarshal([]byte(req.RequestData), &rawCheck); err != nil {
 			return &InvokeResponse{
-				Success:  false,
-				Error:    fmt.Sprintf("invalid JSON: %v", err),
-				Duration: time.Since(startTime).Milliseconds(),
+				Success: false,
+				Error:   fmt.Sprintf("invalid JSON: %v", err),
 			}, nil
 		}
 
@@ -102,15 +97,17 @@ func (i *Invoker) Invoke(req *InvokeRequest, methodDesc *desc.MethodDescriptor) 
 				errorMsg += fmt.Sprintf("\nError: %s", err.Error())
 			}
 			return &InvokeResponse{
-				Success:  false,
-				Error:    errorMsg,
-				Duration: time.Since(startTime).Milliseconds(),
+				Success: false,
+				Error:   errorMsg,
 			}, nil
 		}
 	}
 
 	// Prepare header and trailer collectors
 	var header, trailer metadata.MD
+
+	// 只统计 RPC 调用耗时
+	startTime := time.Now()
 
 	stub := grpcdynamic.NewStub(conn)
 	respMsg, err := stub.InvokeRpc(
@@ -120,11 +117,13 @@ func (i *Invoker) Invoke(req *InvokeRequest, methodDesc *desc.MethodDescriptor) 
 		grpc.Header(&header),
 		grpc.Trailer(&trailer),
 	)
+	duration := time.Since(startTime).Milliseconds()
+
 	if err != nil {
 		return &InvokeResponse{
 			Success:  false,
 			Error:    fmt.Sprintf("invoke failed: %v", err),
-			Duration: time.Since(startTime).Milliseconds(),
+			Duration: duration,
 		}, nil
 	}
 
@@ -139,14 +138,14 @@ func (i *Invoker) Invoke(req *InvokeRequest, methodDesc *desc.MethodDescriptor) 
 		return &InvokeResponse{
 			Success:  false,
 			Error:    fmt.Sprintf("failed to marshal response: %v", err),
-			Duration: time.Since(startTime).Milliseconds(),
+			Duration: duration,
 		}, nil
 	}
 
 	return &InvokeResponse{
 		Success:  true,
 		Data:     string(respData),
-		Duration: time.Since(startTime).Milliseconds(),
+		Duration: duration,
 		Header:   mdToMap(header),
 		Trailer:  mdToMap(trailer),
 	}, nil

@@ -310,7 +310,7 @@ export default function MethodInvoke() {
       <Card title="请求配置" style={{ marginBottom: '16px' }}>
         <Form form={form} initialValues={{ timeout: 30 }}>
           <Row gutter={24}>
-            <Col span={6}>
+            <Col span={5}>
               <Form.Item label="选择配置" style={{ width: '100%', marginBottom: 0 }}>
                 <Select
                   placeholder="选择已保存的配置"
@@ -347,21 +347,31 @@ export default function MethodInvoke() {
                 <InputNumber min={1} max={300} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
-            <Col span={3}>
-              <Form.Item name="useTLS" label="使用 TLS" valuePropName="checked" style={{ marginBottom: 0 }}>
+            <Col span={2}>
+              <Form.Item name="useTLS" label="TLS" valuePropName="checked" style={{ marginBottom: 0 }}>
                 <Switch />
               </Form.Item>
             </Col>
             <Col span={3}>
-              <Form.Item name="insecureSkip" label="跳过证书验证" valuePropName="checked" style={{ marginBottom: 0 }}>
+              <Form.Item name="insecureSkip" label="跳过验证" valuePropName="checked" style={{ marginBottom: 0 }}>
                 <Switch />
               </Form.Item>
             </Col>
-            <Col span={3}>
+            <Col span={5}>
               <Form.Item style={{ marginBottom: 0 }}>
-                <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveScheme}>
-                  保存方案
-                </Button>
+                <Space>
+                  <Button icon={<SaveOutlined />} onClick={handleSaveScheme}>
+                    保存
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<PlayCircleOutlined />}
+                    onClick={handleInvoke}
+                    loading={loading}
+                  >
+                    发起调用
+                  </Button>
+                </Space>
               </Form.Item>
             </Col>
           </Row>
@@ -396,17 +406,6 @@ export default function MethodInvoke() {
               formatOnType: true,
             }}
           />
-        </div>
-        <div style={{ marginTop: '16px' }}>
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlayCircleOutlined />}
-            onClick={handleInvoke}
-            loading={loading}
-          >
-            发起调用
-          </Button>
         </div>
       </Card>
 
